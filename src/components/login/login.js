@@ -1,10 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
 import "./login.css";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
+  let navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      let response = await fetch("http://localhost:4400/api/v1/login", {
+        method: "POST", // *GET, POST, PUT, DELETE, etc.
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          // 'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+        setEmail("");
+        setPassword("");
+        setError("");
+        return navigate("/home");
+      } else {
+        const data = await response.json();
+        console.log(data);
+        setError(data.message);
+
+        // console.log("error");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setIsLoading(false);
+  };
+
   return (
     <div className="container-fluid m-0 bg-dark p-0">
       <div className="row g-0">
@@ -29,10 +72,21 @@ function Login() {
                 <hr />
               </div>
 
-              <Form>
+              {error && (
+                <div className="alert alert-danger mb-1 p-2" role="alert">
+                  {error}
+                </div>
+              )}
+
+              <Form onSubmit={handleLogin}>
                 <Form.Group className="mb-3" controlId="formBasicEmail">
                   <Form.Label>Email address</Form.Label>
-                  <Form.Control type="email" placeholder="name@compay.com" />
+                  <Form.Control
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@compay.com"
+                  />
                   {/* <Form.Text className="text-muted">
                     We'll never share your email with anyone else.
                   </Form.Text> */}
@@ -40,14 +94,30 @@ function Login() {
 
                 <Form.Group className="mb-3" controlId="formBasicPassword">
                   <Form.Label>Password</Form.Label>
-                  <Form.Control type="password" placeholder="Password" />
+                  <Form.Control
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                  />
                 </Form.Group>
                 {/* <Form.Group className="mb-3" controlId="formBasicCheckbox">
                   <Form.Check type="checkbox" label="Check me out" />
                 </Form.Group> */}
                 <div className="d-grid gap-2">
-                  <Button variant="primary" type="submit">
-                    Login
+                  <Button variant="primary" type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>{" "}
+                        Loading...
+                      </>
+                    ) : (
+                      "Login"
+                    )}
                   </Button>
                 </div>
               </Form>
